@@ -1,11 +1,37 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+const HIGH_SCORE_KEY = "pose-dodge-highscore-round"; // numeric high score (best rounds)
 
 export default function YouLost() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const roundsSurvived = searchParams.get("round");
+
+  // Last run's rounds (from query string)
+  const lastRound = useMemo(() => {
+    const raw = searchParams.get("round");
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }, [searchParams]);
+
+  // Persisted high score (rounds)
+  const [highRound, setHighRound] = useState<number>(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = Number(localStorage.getItem(HIGH_SCORE_KEY) || "0");
+      const nextHigh = Math.max(stored || 0, lastRound || 0);
+      if (nextHigh !== stored)
+        localStorage.setItem(HIGH_SCORE_KEY, String(nextHigh));
+      setHighRound(nextHigh);
+    } catch {
+      // Fallback if localStorage is blocked
+      setHighRound(lastRound || 0);
+    }
+  }, [lastRound]);
 
   const btnClass =
     "bg-[#FFA94D] text-white text-3xl font-semibold px-16 py-5 rounded-xl border-4 border-white hover:bg-[#ff9e33] transition-all";
@@ -23,11 +49,18 @@ export default function YouLost() {
         <h1 className="text-[96px] font-extrabold text-[#FFA94D] leading-none">
           YOU LOST
         </h1>
-        {roundsSurvived && (
+
+        {/* Last run (if present) */}
+        {lastRound > 0 && (
           <p className="text-2xl font-semibold mt-4 text-gray-800">
-            Highscore: {roundsSurvived} {+roundsSurvived === 1 ? "round" : "rounds"} survived
+            Rounds survived: {lastRound} {lastRound === 1 ? "round" : "rounds"}
           </p>
         )}
+
+        {/* High score (always shown) */}
+        <p className="text-2xl font-semibold mt-2 text-gray-800">
+          Highscore: {highRound} {highRound === 1 ? "round" : "rounds"}
+        </p>
       </div>
 
       {/* Buttons row (both match) */}
