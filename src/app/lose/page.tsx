@@ -18,12 +18,14 @@ export default function YouLost() {
 
       {/* Title box */}
       <div className="bg-white px-12 py-4 rounded-2xl shadow-md mb-20">
-        <h1 className="text-[96px] font-extrabold text-[#FFA94D] leading-none">YOU LOST</h1>
+        <h1 className="text-[96px] font-extrabold text-[#FFA94D] leading-none">
+          YOU LOST
+        </h1>
       </div>
 
       {/* Buttons row (both match) */}
       <div className="flex flex-col sm:flex-row gap-6">
-        <button onClick={() => router.push("/play")} className={btnClass}>
+        <button onClick={() => router.push("/game")} className={btnClass}>
           Try Again
         </button>
         <button onClick={() => router.push("/")} className={btnClass}>

@@ -20,7 +20,7 @@ export default function Home() {
 
       {/* Start button - same orange color */}
       <button
-        onClick={() => router.push("/play")}
+        onClick={() => router.push("/game")}
         className="bg-[#FFA94D] text-white text-3xl font-semibold px-20 py-6 rounded-xl border-4 border-white hover:bg-[#ff9e33] transition-all mt-8"
       >
         Start
