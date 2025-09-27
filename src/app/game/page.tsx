@@ -11,6 +11,34 @@ import {
 const GRID_SIZE = 3;
 const STARTING_LIVES = 3;
 
+const HIGH_SCORE_KEY = "pose-dodge-highscore";
+
+type HighScore = { bestRound: number; bestTimeMs: number };
+
+const loadHighScore = (): HighScore => {
+  if (typeof window === "undefined") return { bestRound: 0, bestTimeMs: 0 };
+  try {
+    return (
+      JSON.parse(localStorage.getItem(HIGH_SCORE_KEY) || "") || {
+        bestRound: 0,
+        bestTimeMs: 0,
+      }
+    );
+  } catch {
+    return { bestRound: 0, bestTimeMs: 0 };
+  }
+};
+
+const updateHighScore = (roundNow: number, timeMsNow: number): HighScore => {
+  const current = loadHighScore();
+  const next: HighScore = {
+    bestRound: Math.max(current.bestRound, roundNow),
+    bestTimeMs: Math.max(current.bestTimeMs, timeMsNow),
+  };
+  localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(next));
+  return next;
+};
+
 export default function GamePage() {
   const router = useRouter();
 
@@ -20,15 +48,21 @@ export default function GamePage() {
 
   const [lives, setLives] = useState(STARTING_LIVES);
   const livesRef = useRef(STARTING_LIVES);
-  useEffect(() => { livesRef.current = lives; }, [lives]);
+  useEffect(() => {
+    livesRef.current = lives;
+  }, [lives]);
 
   const [round, setRound] = useState(1);
   const roundRef = useRef(1);
-  useEffect(() => { roundRef.current = round; }, [round]);
+  useEffect(() => {
+    roundRef.current = round;
+  }, [round]);
 
   const [elapsedMs, setElapsedMs] = useState(0);
   const elapsedRef = useRef(0);
-  useEffect(() => { elapsedRef.current = elapsedMs; }, [elapsedMs]);
+  useEffect(() => {
+    elapsedRef.current = elapsedMs;
+  }, [elapsedMs]);
 
   type Zone = { idx: number; startedAt: number; state: "warn" | "active" };
   const zonesRef = useRef<Zone[]>([]);
@@ -61,13 +95,18 @@ export default function GamePage() {
         streamRef.current = s;
         const v = videoRef.current!;
         v.srcObject = s;
-        await new Promise<void>((res) => v.addEventListener("loadedmetadata", () => res(), { once: true }));
+        await new Promise<void>((res) =>
+          v.addEventListener("loadedmetadata", () => res(), { once: true })
+        );
         v.muted = true;
         await v.play().catch(() => {});
 
         const vision = await FilesetResolver.forVisionTasks("/wasm");
         const landmarker = await PoseLandmarker.createFromOptions(vision, {
-          baseOptions: { modelAssetPath: "/models/pose_landmarker_full.task", delegate: "GPU" },
+          baseOptions: {
+            modelAssetPath: "/models/pose_landmarker_full.task",
+            delegate: "GPU",
+          },
           runningMode: "VIDEO",
           numPoses: 1,
         });
@@ -96,8 +135,14 @@ export default function GamePage() {
           for (let i = 1; i < GRID_SIZE; i++) {
             const x = (i * c.width) / GRID_SIZE;
             const y = (i * c.height) / GRID_SIZE;
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.height); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.width, y); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, c.height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(c.width, y);
+            ctx.stroke();
           }
           ctx.restore();
         };
@@ -128,13 +173,23 @@ export default function GamePage() {
           ctx.fillStyle = "rgba(0,200,150,0.95)";
           for (const p of lm) {
             ctx.beginPath();
-            ctx.arc(p.x * c.width, p.y * c.height, Math.max(2, c.width * 0.007), 0, Math.PI * 2);
+            ctx.arc(
+              p.x * c.width,
+              p.y * c.height,
+              Math.max(2, c.width * 0.007),
+              0,
+              Math.PI * 2
+            );
             ctx.fill();
           }
           ctx.restore();
         };
 
-        zonesRef.current = pickNDistinct(2).map(idx => ({ idx, startedAt: performance.now(), state: "warn" }));
+        zonesRef.current = pickNDistinct(2).map((idx) => ({
+          idx,
+          startedAt: performance.now(),
+          state: "warn",
+        }));
 
         const loop = (timeNow: number) => {
           if (cancelled) return;
@@ -156,7 +211,9 @@ export default function GamePage() {
           if (lmLocal) {
             lmLocal.detectForVideo(v, now, (res: PoseLandmarkerResult) => {
               const kps = res.landmarks?.[0];
-              lastLandmarks.current = kps ? kps.map(p => ({ x: 1 - p.x, y: p.y })) : null;
+              lastLandmarks.current = kps
+                ? kps.map((p) => ({ x: 1 - p.x, y: p.y }))
+                : null;
             });
           }
 
@@ -166,9 +223,16 @@ export default function GamePage() {
           let numDangers = 2;
           let warningTime = 4000;
           const currentRound = roundRef.current;
-          if (currentRound <= 5) { numDangers = 2; warningTime = 4000; }
-          else if (currentRound <= 10) { numDangers = 3; warningTime = 3000; }
-          else { numDangers = 4; warningTime = 2000; }
+          if (currentRound <= 5) {
+            numDangers = 2;
+            warningTime = 4000;
+          } else if (currentRound <= 10) {
+            numDangers = 3;
+            warningTime = 3000;
+          } else {
+            numDangers = 4;
+            warningTime = 2000;
+          }
 
           const zones = zonesRef.current;
           for (let i = 0; i < zones.length; i++) {
@@ -187,22 +251,40 @@ export default function GamePage() {
                   for (const p of lmArr) {
                     const px = p.x * c.width;
                     const py = p.y * c.height;
-                    if (px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h) {
-                      hit = true; break;
+                    if (
+                      px >= rect.x &&
+                      px <= rect.x + rect.w &&
+                      py >= rect.y &&
+                      py <= rect.y + rect.h
+                    ) {
+                      hit = true;
+                      break;
                     }
                   }
                 }
-                if (hit) setLives(prev => { const n = Math.max(0, prev - 1); livesRef.current = n; return n; });
+                if (hit)
+                  setLives((prev) => {
+                    const n = Math.max(0, prev - 1);
+                    livesRef.current = n;
+                    return n;
+                  });
               } else drawWarning(z.idx);
             }
             if (z.state === "active") drawActive(z.idx);
           }
 
           // advance zones if any active elapsed
-          const oldestActive = zones.find(z => z.state === "active" && now - z.startedAt >= 800);
+          const oldestActive = zones.find(
+            (z) => z.state === "active" && now - z.startedAt >= 800
+          );
           if (oldestActive) {
-            zonesRef.current = pickNDistinct(numDangers, zones.map(z => z.idx)).map(idx => ({
-              idx, startedAt: now, state: "warn"
+            zonesRef.current = pickNDistinct(
+              numDangers,
+              zones.map((z) => z.idx)
+            ).map((idx) => ({
+              idx,
+              startedAt: now,
+              state: "warn",
             }));
             roundRef.current += 1;
             setRound(roundRef.current);
@@ -210,15 +292,42 @@ export default function GamePage() {
 
           if (lastLandmarks.current) drawLandmarks(lastLandmarks.current);
 
-          setElapsedMs(t => { const newT = t + dt * 1000; elapsedRef.current = newT; return newT; });
+          setElapsedMs((t) => {
+            const newT = t + dt * 1000;
+            elapsedRef.current = newT;
+            return newT;
+          });
 
-          if (livesRef.current <= 0) { setTimeout(() => router.push("/lose"), 200); return; }
+          if (livesRef.current <= 0) {
+            // Decide what "score" means — here we store BOTH round and survival time:
+            const finalRound = roundRef.current;
+            const finalTimeMs = Math.floor(elapsedRef.current);
+
+            // Persist high score in localStorage
+            updateHighScore(finalRound, finalTimeMs);
+
+            // Pass the last run's score to the /lose page (either query or sessionStorage)
+            // Option A: query params (simple & explicit)
+            const query = new URLSearchParams({
+              round: String(finalRound),
+              timeMs: String(finalTimeMs),
+            }).toString();
+            setTimeout(() => router.push(`/lose?${query}`), 200);
+
+            // Option B (alternative): sessionStorage (uncomment if you prefer)
+            // sessionStorage.setItem("lastScore", JSON.stringify({ round: finalRound, timeMs: finalTimeMs }));
+            // setTimeout(() => router.push("/lose"), 200);
+
+            return;
+          }
 
           rafRef.current = requestAnimationFrame(loop);
         };
 
         rafRef.current = requestAnimationFrame(loop);
-      } catch (err) { console.error(err); }
+      } catch (err) {
+        console.error(err);
+      }
     };
 
     start();
@@ -227,7 +336,7 @@ export default function GamePage() {
       cancelled = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       landmarkerRef.current?.close();
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, [router]);
 
