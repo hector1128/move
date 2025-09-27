@@ -33,37 +33,41 @@ export default function YouLost() {
     }
   }, [lastRound]);
 
+  // Match Instructions-page look: white title pill + bordered panel with white text
   const btnClass =
-    "bg-[#FFA94D] text-white text-3xl font-semibold px-16 py-5 rounded-xl border-4 border-white hover:bg-[#ff9e33] transition-all";
+    "bg-transparent text-white text-3xl font-semibold px-16 py-5 rounded-xl border-4 border-white hover:bg-white/10 transition-all";
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#FFA94D] overflow-hidden">
       {/* Decorative corner triangles (same as title page) */}
-      <div className="absolute top-0 left-0 w-0 h-0 border-t-[80px] border-t-white border-r-[80px] border-r-transparent"></div>
-      <div className="absolute top-0 right-0 w-0 h-0 border-t-[80px] border-t-white border-l-[80px] border-l-transparent"></div>
-      <div className="absolute bottom-0 left-0 w-0 h-0 border-b-[80px] border-b-white border-r-[80px] border-r-transparent"></div>
-      <div className="absolute bottom-0 right-0 w-0 h-0 border-b-[80px] border-b-white border-l-[80px] border-l-transparent"></div>
+      <div className="absolute top-0 left-0 w-0 h-0 border-t-[80px] border-t-white border-r-[80px] border-r-transparent" />
+      <div className="absolute top-0 right-0 w-0 h-0 border-t-[80px] border-t-white border-l-[80px] border-l-transparent" />
+      <div className="absolute bottom-0 left-0 w-0 h-0 border-b-[80px] border-b-white border-r-[80px] border-r-transparent" />
+      <div className="absolute bottom-0 right-0 w-0 h-0 border-b-[80px] border-b-white border-l-[80px] border-l-transparent" />
 
-      {/* Title box */}
-      <div className="bg-white px-12 py-4 rounded-2xl shadow-md mb-4 text-center">
+      {/* Title pill */}
+      <div className="bg-white px-12 py-4 rounded-2xl shadow-md mb-6 text-center">
         <h1 className="text-[96px] font-extrabold text-[#FFA94D] leading-none">
-          YOU LOST
+          YOU LOSE
         </h1>
-
-        {/* Last run (if present) */}
-        {lastRound > 0 && (
-          <p className="text-2xl font-semibold mt-4 text-gray-800">
-            Rounds survived: {lastRound} {lastRound === 1 ? "round" : "rounds"}
-          </p>
-        )}
-
-        {/* High score (always shown) */}
-        <p className="text-2xl font-semibold mt-2 text-gray-800">
-          Highscore: {highRound} {highRound === 1 ? "round" : "rounds"}
-        </p>
       </div>
 
-      {/* Buttons row (both match) */}
+      {/* Score panel styled like Instructions box */}
+      <div className="w-[92%] max-w-[900px] mb-8">
+        <div className="rounded-2xl border-4 border-white px-8 py-10 text-center shadow-xl">
+          <div className="space-y-4 text-white font-extrabold text-2xl md:text-3xl leading-relaxed">
+            <p>
+              Rounds survived: {lastRound}{" "}
+              {lastRound === 1 ? "round" : "rounds"}
+            </p>
+            <p>
+              Highscore: {highRound} {highRound === 1 ? "round" : "rounds"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Buttons row (outline like Instructions page) */}
       <div className="flex flex-col sm:flex-row gap-6">
         <button onClick={() => router.push("/game")} className={btnClass}>
           Try Again
