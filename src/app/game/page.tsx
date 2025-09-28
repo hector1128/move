@@ -7,6 +7,7 @@ import {
   PoseLandmarker,
   type PoseLandmarkerResult,
 } from "@mediapipe/tasks-vision";
+import { useBGM } from "../providers/BGMProvider"; // adjust path if needed
 
 const GRID_SIZE = 3;
 const STARTING_LIVES = 3;
@@ -40,6 +41,8 @@ const updateHighScore = (roundNow: number, timeMsNow: number): HighScore => {
 };
 
 export default function GamePage() {
+  const bgm = useBGM();
+
   const router = useRouter();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -85,6 +88,20 @@ export default function GamePage() {
     }
     return Array.from(out);
   };
+
+  useEffect(() => {
+    // If you called bgm.unlock() on the Start/Instructions button,
+    // this will cross-fade immediately. If not, it will try anyway.
+    (async () => {
+      try {
+        await bgm.fadeTo("game", 700);
+      } catch {}
+    })();
+
+    return () => {
+      bgm.fadeTo(null, 300).catch(() => {});
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -364,8 +381,8 @@ export default function GamePage() {
   return (
     <div className="min-h-screen flex flex-col items-center bg-[#FFA94D]">
       <div className="w-[95%] max-w-[1200px] mt-6 p-3 rounded-2xl bg-white/90 flex items-center justify-between">
-        <div className="font-bold">Round: {round}</div>
-        <div className="font-mono">{formatTime(elapsedMs)}</div>
+        <div className="font-bold text-black">Round: {round}</div>
+        <div className="font-mono text-black">{formatTime(elapsedMs)}</div>
         <div className="text-red-600 font-bold">Lives: {"❤".repeat(lives)}</div>
       </div>
       <div className="w-[95%] max-w-[1200px] mt-6 aspect-[16/9] rounded-2xl overflow-hidden relative shadow-lg border-4 border-[#FFA94D] bg-black">
