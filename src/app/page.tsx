@@ -2,26 +2,26 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useBGM } from "./providers/BGMProvider"; // adjust path if different
+import { useBGM } from "./providers/BGMProvider";
 
 export default function Home() {
   const router = useRouter();
   const bgm = useBGM();
 
-  // Try to start menu music (will actually play once audio is unlocked by a click)
+  // Optional: try to start menu later if already unlocked (harmless if not)
   useEffect(() => {
-    bgm.fadeTo("menu", 700).catch(() => {});
-    return () => {
-      bgm.fadeTo(null, 200).catch(() => {});
-    };
+    // No unlock here; just in case user navigates back and is already unlocked
+    bgm.fadeTo("menu", 600).catch(() => {});
+    // IMPORTANT: remove the cleanup that fades to null
   }, []);
 
   return (
     <div
       className="relative flex flex-col items-center justify-center min-h-screen bg-[#FFA94D] overflow-hidden"
-      // any first click unlocks audio autoplay policy
       onClick={async () => {
+        // First user gesture: unlock AND start the menu track immediately
         await bgm.unlock();
+        await bgm.fadeTo("menu", 300);
       }}
     >
       {/* corners */}
@@ -38,7 +38,7 @@ export default function Home() {
       {/* Start -> instructions */}
       <button
         onClick={async () => {
-          // ensure audio is unlocked and menu music is audible as we leave
+          // Ensure we’re unlocked and the menu music is already playing
           await bgm.unlock();
           await bgm.fadeTo("menu", 200);
           router.push("/instructions");
