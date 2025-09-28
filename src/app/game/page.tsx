@@ -64,6 +64,9 @@ export default function GamePage() {
     elapsedRef.current = elapsedMs;
   }, [elapsedMs]);
 
+  const [playerMissing, setPlayerMissing] = useState(false);
+  const lastPoseTimeRef = useRef<number>(performance.now());
+
   type Zone = { idx: number; startedAt: number; state: "warn" | "active" };
   const zonesRef = useRef<Zone[]>([]);
   const lastLandmarks = useRef<Array<{ x: number; y: number }> | null>(null);
@@ -198,7 +201,6 @@ export default function GamePage() {
           const dt = (now - last) / 1000;
           lastFrame.current = now;
 
-          // mirrored video
           ctx.save();
           ctx.clearRect(0, 0, c.width, c.height);
           ctx.translate(c.width, 0);
@@ -206,20 +208,45 @@ export default function GamePage() {
           ctx.drawImage(v, 0, 0, c.width, c.height);
           ctx.restore();
 
-          // pose detection
           const lmLocal = landmarkerRef.current;
           if (lmLocal) {
             lmLocal.detectForVideo(v, now, (res: PoseLandmarkerResult) => {
               const kps = res.landmarks?.[0];
+              if (kps) {
+                lastPoseTimeRef.current = performance.now();
+              }
               lastLandmarks.current = kps
                 ? kps.map((p) => ({ x: 1 - p.x, y: p.y }))
                 : null;
             });
           }
 
+          const timeSinceLastPose = now - lastPoseTimeRef.current;
+          const noPose = timeSinceLastPose > 3000;
+          setPlayerMissing(noPose);
+
           drawGrid();
 
-          // determine current danger count and warning time
+          if (noPose) {
+            ctx.save();
+            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillRect(0, 0, c.width, c.height);
+            ctx.fillStyle = "red";
+            ctx.font = "bold 64px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(" NO PLAYER DETECTED ", c.width / 2, c.height / 2);
+            ctx.font = "bold 36px Arial";
+            ctx.fillText(
+              "Step into the frame to continue playing!",
+              c.width / 2,
+              c.height / 2 + 70
+            );
+            ctx.restore();
+            rafRef.current = requestAnimationFrame(loop);
+            return;
+          }
+
           let numDangers = 2;
           let warningTime = 4000;
           const currentRound = roundRef.current;
@@ -243,7 +270,6 @@ export default function GamePage() {
                 z.state = "active";
                 z.startedAt = now;
 
-                // collision check
                 const lmArr = lastLandmarks.current;
                 let hit = false;
                 if (lmArr) {
@@ -273,7 +299,6 @@ export default function GamePage() {
             if (z.state === "active") drawActive(z.idx);
           }
 
-          // advance zones if any active elapsed
           const oldestActive = zones.find(
             (z) => z.state === "active" && now - z.startedAt >= 800
           );
@@ -299,25 +324,14 @@ export default function GamePage() {
           });
 
           if (livesRef.current <= 0) {
-            // Decide what "score" means — here we store BOTH round and survival time:
             const finalRound = roundRef.current;
             const finalTimeMs = Math.floor(elapsedRef.current);
-
-            // Persist high score in localStorage
             updateHighScore(finalRound, finalTimeMs);
-
-            // Pass the last run's score to the /lose page (either query or sessionStorage)
-            // Option A: query params (simple & explicit)
             const query = new URLSearchParams({
               round: String(finalRound),
               timeMs: String(finalTimeMs),
             }).toString();
             setTimeout(() => router.push(`/lose?${query}`), 200);
-
-            // Option B (alternative): sessionStorage (uncomment if you prefer)
-            // sessionStorage.setItem("lastScore", JSON.stringify({ round: finalRound, timeMs: finalTimeMs }));
-            // setTimeout(() => router.push("/lose"), 200);
-
             return;
           }
 

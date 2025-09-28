@@ -48,7 +48,7 @@ export default function YouLost() {
       {/* Title pill */}
       <div className="bg-white px-12 py-4 rounded-2xl shadow-md mb-6 text-center">
         <h1 className="text-[96px] font-extrabold text-[#FFA94D] leading-none">
-          YOU LOSE
+          GAME OVER
         </h1>
       </div>
 
@@ -57,11 +57,11 @@ export default function YouLost() {
         <div className="rounded-2xl border-4 border-white px-8 py-10 text-center shadow-xl">
           <div className="space-y-4 text-white font-extrabold text-2xl md:text-3xl leading-relaxed">
             <p>
-              Rounds survived: {lastRound}{" "}
-              {lastRound === 1 ? "round" : "rounds"}
+              YOUR SCORE: {lastRound}{" "}
+              {lastRound === 1 ? "ROUND" : "ROUNDS"}
             </p>
             <p>
-              Highscore: {highRound} {highRound === 1 ? "round" : "rounds"}
+              HIGH SCORE: {highRound} {highRound === 1 ? "ROUND" : "ROUNDS"}
             </p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function YouLost() {
       {/* Buttons row (outline like Instructions page) */}
       <div className="flex flex-col sm:flex-row gap-6">
         <button onClick={() => router.push("/game")} className={btnClass}>
-          Try Again
+          Play Again
         </button>
         <button onClick={() => router.push("/")} className={btnClass}>
           Home

@@ -19,20 +19,18 @@ export default function InstructionsPage() {
       <div className="absolute bottom-0 right-0 w-0 h-0 border-b-[80px] border-b-white border-l-[80px] border-l-transparent" />
 
       {/* Title pill — same as Home */}
-      <div className="bg-white px-8 md:px-12 py-3 md:py-4 rounded-2xl shadow-md mb-6 md:mb-8">
+      <div className="pb-10 bg-white px-8 md:px-12 py-3 md:py-4 rounded-2xl shadow-md mb-6 md:mb-8">
         <h1 className="text-[64px] md:text-[96px] font-extrabold text-[#FFA94D] leading-none">
           INSTRUCTIONS
         </h1>
       </div>
 
       {/* Compact centered copy (bold, one line each) */}
-      <div className="w-full max-w-[820px] border-4 border-white rounded-2xl px-6 md:px-8 py-6 md:py-8 bg-transparent">
-        <div className="text-white text-lg md:text-xl text-center leading-tight space-y-3">
-          <p className="font-bold">Step out of any yellow cell before it turns red.</p>
-          <p className="font-bold">Each red cell touching you costs 1 life (you have 3).</p>
-          <p className="font-bold">Rounds speed up and add more cells (max 4).</p>
-          <p className="font-bold">Dodge by stepping/leaning, jumping, or ducking.</p>
-          <p className="font-bold">Have Fun and MOVE</p>
+      <div className="pt-10 w-full max-w-[820px] border-4 border-white rounded-2xl px-6 md:px-8 py-6 md:py-8 bg-transparent">
+        <div className="text-white text-xl md:text-2xl text-center leading-tight space-y-3">
+          <p className="font-bold">  YOU HAVE 3 LIVES</p>
+          <p className="font-bold"> AVOID YELLOW BOXES BEFORE THEY TURN RED</p>
+          <p className="font-bold"> HAVE FUN AND MOVE</p>
         </div>
       </div>
 
